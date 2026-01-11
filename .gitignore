@@ -1,0 +1,6 @@
+MDK-ARM/
+Drivers/
+FreeRTOS/
+*.exe
+*.mxproject
+*.ioc
