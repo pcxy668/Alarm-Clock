@@ -57,6 +57,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define BUZZER_EN_Pin GPIO_PIN_1
+#define BUZZER_EN_GPIO_Port GPIOA
+#define CHRGT_Pin GPIO_PIN_2
+#define CHRGT_GPIO_Port GPIOA
+#define CHRG_Pin GPIO_PIN_3
+#define CHRG_GPIO_Port GPIOA
 #define ALARM_SET_Pin GPIO_PIN_6
 #define ALARM_SET_GPIO_Port GPIOA
 #define ALARM_EN_Pin GPIO_PIN_7
@@ -73,6 +79,8 @@ void Error_Handler(void);
 #define LIGHT_GPIO_Port GPIOB
 #define TOUCH_Pin GPIO_PIN_14
 #define TOUCH_GPIO_Port GPIOB
+#define DS18B20_DATA_Pin GPIO_PIN_15
+#define DS18B20_DATA_GPIO_Port GPIOB
 #define ALARM_5DAY_Pin GPIO_PIN_8
 #define ALARM_5DAY_GPIO_Port GPIOA
 #define MIC_Pin GPIO_PIN_12
