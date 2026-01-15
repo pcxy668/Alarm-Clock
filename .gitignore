@@ -4,3 +4,5 @@ FreeRTOS/
 *.exe
 *.mxproject
 *.ioc
+*.xls
+*.xlsx
