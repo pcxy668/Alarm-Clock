@@ -1,10 +1,5 @@
-MDK-ARM/
 Drivers/
 FreeRTOS/
-Others/
+MDK-ARM/
 *.exe
 *.mxproject
-*.ioc
-*.xls
-*.xlsx
-*.bmp
