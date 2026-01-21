@@ -2,28 +2,61 @@
 
 char temperature;
 RTC_TimeTypeDef time;
+RTC_TimeTypeDef time_buffer;
 RTC_DateTypeDef date;
+RTC_DateTypeDef date_buffer;
+uint8_t is_24hour = 1;
+uint8_t oled_en = 1; //屏幕开关使能
+uint8_t wake_en = 1; //屏幕唤醒使能
+uint16_t sleep_time_count = 0; //进入睡眠计时
+uint8_t sleepFlag = 0; //睡眠状态
+uint8_t oled_is_on = 0; //屏幕是否已经开启
+uint8_t alarm_suspend = 0; //闹钟暂停
+Show_Type show_type = SHOW_NORMAL; //默认正常展示模式 
+Set_Time_Type set_time_type = SET_TIME_YEAR;
+Set_Alarm_Type set_alarm_type = SET_ALARM1_HOUR;
 
-//采集类任务：获取时间、温度等
+Alarm_Info alarm_info = 
+{
+    {7,0,0},
+    {7,30,0},
+    ALARM_OFF,
+    ALARM_OFF
+};
+
+// 采集类任务：获取时间、温度等
 void collect_task(void *pvParameters);
 #define COLLECT_TASK_STACK_DEPTH 128
 #define COLLECT_TASK_PRIORITY 1
 TaskHandle_t collect_task_handle;
 
-//展示类任务：屏幕显示等
+// 展示类任务：屏幕显示等
 void show_task(void *pvParameters);
 #define SHOW_TASK_STACK_DEPTH 128
 #define SHOW_TASK_PRIORITY 2
 TaskHandle_t show_task_handle;
 
+// 触发类任务：按键开关、触摸等
+void switch_task(void *pvParameters);
+#define SWITCH_TASK_STACK_DEPTH 128
+#define SWITCH_TASK_PRIORITY 3
+TaskHandle_t switch_task_handle;
+
+// 声音类任务：闹铃播放等
+void alarm_task(void *pvParameters);
+#define ALARM_TASK_STACK_DEPTH 128
+#define ALARM_TASK_PRIORITY 2
+TaskHandle_t alarm_task_handle;
+
 void App_freeRTOS_start()
 {
     debug_printf("task-start execute\n");
-    xTaskCreate(collect_task,"collect_task",COLLECT_TASK_STACK_DEPTH,NULL,COLLECT_TASK_PRIORITY,&collect_task_handle);
-    xTaskCreate(show_task,"show_task",SHOW_TASK_STACK_DEPTH,NULL,SHOW_TASK_PRIORITY,&show_task_handle);
-    // xTaskCreate(task3,"task3",128,NULL,1,&task3_handle);
-    // xTaskCreate(task4,"task4",128,NULL,1,&task4_handle);
-    // xTaskCreate(task5,"task5",128,NULL,1,&task5_handle);
+
+    xTaskCreate(collect_task, "collect_task", COLLECT_TASK_STACK_DEPTH, NULL, COLLECT_TASK_PRIORITY, &collect_task_handle);
+    xTaskCreate(show_task, "show_task", SHOW_TASK_STACK_DEPTH, NULL, SHOW_TASK_PRIORITY, &show_task_handle);
+    xTaskCreate(switch_task, "switch_task", SWITCH_TASK_STACK_DEPTH, NULL, SWITCH_TASK_PRIORITY, &switch_task_handle);
+    xTaskCreate(alarm_task, "alarm_task", ALARM_TASK_STACK_DEPTH, NULL, ALARM_TASK_PRIORITY, &alarm_task_handle);
+
     vTaskStartScheduler();
 }
 
@@ -31,94 +64,112 @@ void collect_task(void *pvParameters)
 {
     while (1)
     {
-        HAL_RTC_GetTime(&hrtc,&time,RTC_FORMAT_BIN);
-        HAL_RTC_GetDate(&hrtc,&date,RTC_FORMAT_BIN);
-        Int_DS18B20_Value(&temperature);
+        if (show_type == SHOW_NORMAL)
+        {
+            HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+            HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+            Int_DS18B20_Value(&temperature);
+        }
         vTaskDelay(1000);
     }
 }
 
 void show_task(void *pvParameters)
 {
-    Int_oled_init();
-    Int_oled_displayStr(0,0,"2026-01-15");
-    Int_oled_displayBigNum(2,1,1);
-    Int_oled_displayBigNum(4,1,5);
-    Int_oled_displayBigNum(6,1,10);
-    Int_oled_displayBigNum(8,1,3);
-    Int_oled_displayBigNum(10,1,0);
-    Int_oled_displayIcon(14,0,0);
-    Int_oled_displayIcon(15,0,1);
+    App_show_Init();
     while (1)
     {
-        debug_printf("oled model");
-        vTaskDelay(5000);
+        if (oled_en && (sleepFlag == 0))
+        {
+            if (show_type == SHOW_NORMAL)
+            {
+                taskENTER_CRITICAL();
+                App_show_normal();
+                taskEXIT_CRITICAL();
+            }
+            else if (show_type == SHOW_SET_TIME)
+            {
+                taskENTER_CRITICAL();
+                App_show_set_time();
+                taskEXIT_CRITICAL();
+            }
+            else if (show_type == SHOW_SET_ALARM)
+            {
+                taskENTER_CRITICAL();
+                App_show_set_alarm();
+                taskEXIT_CRITICAL();
+            }            
+        }
+
+        //睡眠管理
+        App_show_sleepManage();
+
+        vTaskDelay(500);
     }
 }
 
-// void task1(void *pvParameters)
-// {
-//     while (1)
-//     {
-//         Key_Type key = Int_key_value();
-//         if (key != KEY_NONE)
-//         {
-//             debug_printf("key %d is pressed\n",(uint8_t)key);
-//             Int_buzzer_once();
-//         }
-//         Mic_Type mic = Int_Mic_value();
-//         if (mic == MIC_ON)
-//         {
-//             debug_printf("mic is on\n");
-//         }
-//         Touch_Type touch = Int_touch_value();
-//         if (touch == TOUCH_UP)
-//         {
-//             debug_printf("touch is up\n");
-//         }
-//         vTaskDelay(1);
-//     }
-// }
-
-// void task2(void *pvParameters)
-// {
-//     while (1)
-//     {
-//         OLED_Type oled = Int_OLED_value();
-//         debug_printf("oled is %d\n",(uint8_t)oled);
-//         Light_Type light = Int_light_value();
-//         debug_printf("light is %d\n",(uint8_t)light);
-//         vTaskDelay(5000);
-//     }
-// }
-
-// void task3(void *pvParameters)
-// {
-//     while (1)
-//     {
-//         RTC_TimeTypeDef time;
-//         RTC_DateTypeDef date;
-//         HAL_RTC_GetTime(&hrtc,&time,RTC_FORMAT_BIN);
-//         HAL_RTC_GetDate(&hrtc,&date,RTC_FORMAT_BIN);
-//         debug_printf("Current time is:20%d-%d-%d %d:%d:%d\n",date.Year,date.Month,date.Date,time.Hours,time.Minutes,time.Seconds);
-//         vTaskDelay(1000);
-//     }
+void switch_task(void *pvParameters)
+{
+    while (1)
+    {
+        if (show_type == SHOW_NORMAL)
+        {
+            App_switch_key_process();
+        }
+        else if (show_type == SHOW_SET_TIME)
+        {
+            App_switch_set_time_process();
+        }
+        else if (show_type == SHOW_SET_ALARM)
+        {
+            App_switch_set_alarm_process();
+        }
+        App_switch_toggle_process();
+        vTaskDelay(20);
+    }
     
-// }
+}
 
-// void task4(void *pvParameters)
-// {
-//     char temperature = 0;
-//     while (1)
-//     {
-//         Int_DS18B20_Value(&temperature);
-//         debug_printf("current T=%d \n",temperature);
-//         vTaskDelay(3000);
-//     }
-// }
+void alarm_task(void *pvParameters)
+{
+    while (1)
+    {
+        if ((alarm_info.Alarm1_Type == ALARM_EVERYDAY) && (alarm_suspend == 0))
+        {
+            if((alarm_info.Alarm1_Time.Hours == time.Hours) && (alarm_info.Alarm1_Time.Minutes == time.Minutes))
+            {
+                Int_buzzer_once();
+            }
+        }
 
-// TaskHandle_t task2_handle;
-// TaskHandle_t task3_handle;
-// TaskHandle_t task4_handle;
-// TaskHandle_t task5_handle;
+        if ((alarm_info.Alarm2_Type == ALARM_EVERYDAY) && (alarm_suspend == 0))
+        {
+            if((alarm_info.Alarm2_Time.Hours == time.Hours) && (alarm_info.Alarm2_Time.Minutes == time.Minutes))
+            {
+                Int_buzzer_once();
+            }
+        }  
 
+        if ((alarm_info.Alarm1_Type == ALARM_5DAY) && (alarm_suspend == 0) && (date.WeekDay >= 1) && (date.WeekDay <= 5))
+        {
+            if((alarm_info.Alarm1_Time.Hours == time.Hours) && (alarm_info.Alarm1_Time.Minutes == time.Minutes))
+            {
+                Int_buzzer_once();
+            }
+        }
+
+        if ((alarm_info.Alarm2_Type == ALARM_5DAY) && (alarm_suspend == 0) && (date.WeekDay >= 1) && (date.WeekDay <= 5))
+        {
+            if((alarm_info.Alarm2_Time.Hours == time.Hours) && (alarm_info.Alarm2_Time.Minutes == time.Minutes))
+            {
+                Int_buzzer_once();
+            }
+        }
+
+        if((alarm_info.Alarm1_Time.Minutes != time.Minutes) && (alarm_info.Alarm2_Time.Minutes != time.Minutes))
+        {
+            alarm_suspend = 0;
+        }
+        vTaskDelay(800);
+    }
+}
