@@ -52,7 +52,11 @@ void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
-
+  if (HAL_RTCEx_BKUPRead(&hrtc,RTC_BKP_DR1) != HAL_OK)
+  {
+    return;
+  }
+  
   /* USER CODE END Check_RTC_BKUP */
 
   /** Initialize RTC and set the Time and Date
@@ -75,7 +79,14 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
+  // 1. 将DR1中的标志位置1
+  HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 1);
 
+  // 2. 将DateToUpdate中的日期保存到DR2~DR5
+  HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR2, hrtc.DateToUpdate.Year);
+  HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR3, hrtc.DateToUpdate.Month);
+  HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR4, hrtc.DateToUpdate.Date);
+  HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR5, hrtc.DateToUpdate.WeekDay);
   /* USER CODE END RTC_Init 2 */
 
 }

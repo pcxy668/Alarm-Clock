@@ -64,12 +64,21 @@ void collect_task(void *pvParameters)
 {
     while (1)
     {
-        if (show_type == SHOW_NORMAL)
-        {
-            HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
-            HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
-            Int_DS18B20_Value(&temperature);
-        }
+
+        hrtc.DateToUpdate.Year = HAL_RTCEx_BKUPRead(&hrtc,RTC_BKP_DR2);
+        hrtc.DateToUpdate.Month = HAL_RTCEx_BKUPRead(&hrtc,RTC_BKP_DR3);
+        hrtc.DateToUpdate.Date = HAL_RTCEx_BKUPRead(&hrtc,RTC_BKP_DR4);
+        hrtc.DateToUpdate.WeekDay = HAL_RTCEx_BKUPRead(&hrtc,RTC_BKP_DR5);
+
+        HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR2, hrtc.DateToUpdate.Year);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR3, hrtc.DateToUpdate.Month);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR4, hrtc.DateToUpdate.Date);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR5, hrtc.DateToUpdate.WeekDay);  
+
+        Int_DS18B20_Value(&temperature);
         vTaskDelay(1000);
     }
 }

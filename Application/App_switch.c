@@ -205,6 +205,11 @@ void App_switch_set_time_process(void)
         HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
         HAL_RTC_SetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR2, hrtc.DateToUpdate.Year);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR3, hrtc.DateToUpdate.Month);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR4, hrtc.DateToUpdate.Date);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR5, hrtc.DateToUpdate.WeekDay);  
+        
         taskENTER_CRITICAL();
         Int_oled_clear();
         taskEXIT_CRITICAL();
