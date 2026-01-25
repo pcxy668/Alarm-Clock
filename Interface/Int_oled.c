@@ -547,12 +547,12 @@ void Int_oled_displayWord(uint8_t x, uint8_t y, uint8_t num)
 
 void Int_oled_On(void)
 { 
-    uint8_t buffer = 0xAF;
-    Int_oled_sendDataBytes(0, &buffer, 1);
+    uint8_t buffer[3] = {0x8D,0x14,0xAF};
+    Int_oled_sendDataBytes(0, buffer, 3);
 }
 
 void Int_oled_Off(void)
 {
-    uint8_t buffer = 0xAE;
-    Int_oled_sendDataBytes(0, &buffer, 1);
+    uint8_t buffer[3] = {0xAE,0x8D,0x10};
+    Int_oled_sendDataBytes(0, buffer, 3);
 }
