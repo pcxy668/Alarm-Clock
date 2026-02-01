@@ -4,11 +4,13 @@
 
 *   [Common](https://github.com/pcxy668/Alarm-Clock/tree/master/Common "Common")                        公共层
 *   [Core](https://github.com/pcxy668/Alarm-Clock/tree/master/Core "Core")                              核心层
+*   [Drivers](https://github.com/pcxy668/Alarm-Clock/tree/master/Drivers "Drivers")                     驱动层             
 *   [Interface](https://github.com/pcxy668/Alarm-Clock/tree/master/Interface "Interface")               接口层
 *   [Application](https://github.com/pcxy668/Alarm-Clock/tree/master/Application "Application")         应用层
+*   [FreeRTOS](https://github.com/pcxy668/Alarm-Clock/tree/master/FreeRTOS "FreeRTOS")                  FreeRTOS
+*   [MDK-ARM](https://github.com/pcxy668/Alarm-Clock/tree/master/MDK-ARM "MDK-ARM")                     MDK工具链
 *   [Others](https://github.com/pcxy668/Alarm-Clock/tree/master/Others "Others")                        原理图、PCB等设计文件
-*   Drivers、MDK-ARM文件可由CubeMX统一生成，FreeRTOS文件可自行移植，故均未上传
-
+FreeRTOS
 ### 2.部分改动
 
 *   未采用LED灯板形式展示，改用0.96寸OLED屏幕展示
