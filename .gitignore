@@ -1,5 +1,2 @@
-Drivers/
-FreeRTOS/
-MDK-ARM/
-*.exe
-*.mxproject
+MDK-ARM/01_ALARM/*
+!MDK-ARM/01_ALARM/01_ALARM.hex
